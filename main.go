@@ -16,7 +16,7 @@ usage: gh <command>
 Here are few commands <3:
 	repo			Print all repositories on the github
 	create repo		Create a new repository
-`
+	heatmap			Print all contributions as heatmap calendar`
 
 func run(args []string) {
 
@@ -29,7 +29,7 @@ func run(args []string) {
 		return
 	}
 
-	accessToken, _ := auth.GetAuth()
+	accessToken, id := auth.GetAuth()
 	client := github.GithubClient(accessToken)
 
 	switch args[0] {
@@ -42,7 +42,10 @@ func run(args []string) {
 		}
 
 	case "heatmap":
-		github.Heatmap()
+		if len(args) < 2 {
+			args = append(args, id)
+		}
+		github.Heatmap(args[1])
 	}
 }
 

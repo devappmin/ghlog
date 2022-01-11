@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
+	"strconv"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/google/go-github/v41/github"
@@ -19,9 +22,9 @@ const PRIVATE string = "private"
 const BASE_URL string = "https://github.com/"
 
 type heatmapSets struct {
-	date  string
-	level string
-	count string
+	date  time.Time
+	level int
+	count int
 }
 
 func login(accessToken string) (context.Context, *http.Client) {
@@ -62,11 +65,12 @@ func CreateRepository(client *github.Client) {
 	fmt.Println(CREATED_REPO, newRepo.GetGitURL())
 }
 
-func Heatmap() {
-	getHeatMap("devappmin")
+func Heatmap(id string) {
+	datasets := getHeatMap(id)
+	printHeatmapCalendar(datasets)
 }
 
-func getHeatMap(id string) {
+func getHeatMap(id string) []heatmapSets {
 	datasets := []heatmapSets{}
 	c := make(chan heatmapSets)
 
@@ -89,20 +93,57 @@ func getHeatMap(id string) {
 
 	for i := 0; i < heatmapContainers.Length(); i++ {
 		container := <-c
-		if container.date != "" {
+		if !container.date.IsZero() {
 			datasets = append(datasets, container)
 		}
 	}
 
-	for idx, container := range datasets {
-		fmt.Println(idx, container.date, container.level, container.count)
+	// Sort structs
+	sort.Slice(datasets, func(i int, j int) bool {
+		if datasets[i].date.After(datasets[j].date) {
+			return false
+		} else {
+			return true
+		}
+	})
+
+	return datasets
+}
+
+func printHeatmapCalendar(datasets []heatmapSets) {
+	for i := 0; i < 7; i++ {
+		printHeatmapRow(datasets, i)
+		fmt.Println()
 	}
 }
 
+func printHeatmapRow(datasets []heatmapSets, weekday int) {
+	for i := weekday; i < len(datasets); i += 7 {
+		printHeatmapContainer(datasets[i].count, datasets[i].level)
+	}
+}
+
+func printHeatmapContainer(count int, level int) {
+	var color string
+
+	if level != 0 {
+		color = "\033[32m"
+	} else {
+		color = "\033[0m"
+	}
+
+	fmt.Printf("%s %2d", color, count)
+}
+
 func extractContainer(container *goquery.Selection, c chan<- heatmapSets) {
-	date, _ := container.Attr("data-date")
-	count, _ := container.Attr("data-count")
-	level, _ := container.Attr("data-level")
+	dateStr, _ := container.Attr("data-date")
+	date, _ := time.Parse("2006-01-02", dateStr)
+
+	countStr, _ := container.Attr("data-count")
+	count, _ := strconv.Atoi(countStr)
+
+	levelStr, _ := container.Attr("data-level")
+	level, _ := strconv.Atoi(levelStr)
 
 	c <- heatmapSets{
 		date:  date,
