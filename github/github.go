@@ -197,7 +197,7 @@ func getAnswer(question string) string {
 
 	fmt.Print(question)
 	ans, _ := in.ReadString('\n')
-	ans = strings.Replace(ans, " ", "-", -1)
+	ans = strings.Replace(strings.TrimSpace(ans), " ", "-", -1)
 	return ans
 }
 
