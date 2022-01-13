@@ -39,7 +39,7 @@ func inputAuth() gitAuth {
 }
 
 func saveAuth() gitAuth {
-	authFile, err := os.Create(authFileName)
+	authFile, err := os.Create(getAuthDirectory() + authFileName)
 	checkErr(err)
 	defer authFile.Close()
 
@@ -51,7 +51,8 @@ func saveAuth() gitAuth {
 }
 
 func loadAuth() (gitAuth, error) {
-	authFile, err := os.Open(authFileName)
+
+	authFile, err := os.Open(getAuthDirectory() + authFileName)
 	defer authFile.Close()
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -68,6 +69,12 @@ func loadAuth() (gitAuth, error) {
 	fmt.Fscanf(authFile, "%s %s", &accessToken, &id)
 
 	return gitAuth{accessToken: accessToken, id: id}, nil
+}
+
+func getAuthDirectory() string {
+	dirname, err := os.UserHomeDir()
+	checkErr(err)
+	return dirname + "/"
 }
 
 func checkErr(err error) {

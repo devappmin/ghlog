@@ -1,12 +1,15 @@
 package github
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -15,7 +18,7 @@ import (
 )
 
 const SET_REPO_NAME string = "Set Repository Name: "
-const SET_REPO_VISIBILITY string = "Set Repository Visibility [public/private]: "
+const SET_REPO_VISIBILITY string = "Set Repository Visibility [default:public/private]: "
 const CREATED_REPO string = "Created Repository: "
 const PRIVATE string = "private"
 
@@ -36,13 +39,13 @@ func login(accessToken string) (context.Context, *http.Client) {
 	return ctx, oauth2.NewClient(ctx, ts)
 }
 
-func GithubClient(accessToken string) *github.Client {
-	_, tc := login(accessToken)
-	return github.NewClient(tc)
+func GithubClient(accessToken string) (*github.Client, context.Context) {
+	ctx, tc := login(accessToken)
+	return github.NewClient(tc), ctx
 }
 
-func PrintRepositories(client *github.Client) {
-	repos, _, err := client.Repositories.List(context.Background(), "", nil)
+func PrintRepositories(client *github.Client, ctx context.Context) {
+	repos, _, err := client.Repositories.List(ctx, "", nil)
 	checkErr(err)
 
 	for idx, repo := range repos {
@@ -50,27 +53,64 @@ func PrintRepositories(client *github.Client) {
 	}
 }
 
-func CreateRepository(client *github.Client) {
+func PrintOrganizations(client *github.Client, ctx context.Context) {
+	orgs, _, err := client.Organizations.List(ctx, "", nil)
+	checkErr(err)
+
+	for idx, org := range orgs {
+		fmt.Printf("%.3d %s\n", idx, org.GetLogin())
+	}
+}
+
+func Search(client *github.Client, ctx context.Context, title string, from int, to int) {
+	results, _, err := client.Search.Repositories(ctx, title, nil)
+	checkErr(err)
+
+	resultsLen := len(results.Repositories)
+
+	if to > resultsLen {
+		to = resultsLen
+	}
+
+	if to == 0 || from > to {
+		log.Fatalln("No repositories found")
+	}
+
+	for i := from; i < to; i++ {
+		fmt.Printf("%.3d────┬ name:        %s\n", i-from, results.Repositories[i].GetName())
+		fmt.Printf("       ├ description: %s\n", results.Repositories[i].GetDescription())
+		fmt.Printf("       ├ author:      %s\n", results.Repositories[i].GetOwner().GetLogin())
+		fmt.Printf("       ├ link:        %s\n", results.Repositories[i].GetHTMLURL())
+		fmt.Printf("       ├ star:        %d Stars\n", results.Repositories[i].GetStargazersCount())
+		fmt.Printf("       └ language:    %s\n", results.Repositories[i].GetLanguage())
+	}
+}
+
+func CreateRepository(client *github.Client, ctx context.Context) {
 	repoName := getAnswer(SET_REPO_NAME)
-	repoVisibility := (getAnswer(SET_REPO_VISIBILITY) == PRIVATE)
+	repoVisibility := (strings.ToLower(getAnswer(SET_REPO_VISIBILITY)) == PRIVATE)
 
 	repo := &github.Repository{
 		Name:    github.String(repoName),
 		Private: github.Bool(repoVisibility),
 	}
 
-	newRepo, _, err := client.Repositories.Create(context.Background(), "", repo)
+	newRepo, _, err := client.Repositories.Create(ctx, "", repo)
 	checkErr(err)
 
-	fmt.Println(CREATED_REPO, newRepo.GetGitURL())
+	fmt.Println(CREATED_REPO, newRepo.GetHTMLURL()+".git")
 }
 
 func Heatmap(id string) {
-	datasets := getHeatMap(id)
+	c := make(chan []heatmapSets)
+	go getHeatMap(id, c)
+
+	datasets := <-c
+
 	printHeatmapCalendar(datasets)
 }
 
-func getHeatMap(id string) []heatmapSets {
+func getHeatMap(id string, cc chan<- []heatmapSets) {
 	datasets := []heatmapSets{}
 	c := make(chan heatmapSets)
 
@@ -107,7 +147,7 @@ func getHeatMap(id string) []heatmapSets {
 		}
 	})
 
-	return datasets
+	cc <- datasets
 }
 
 func printHeatmapCalendar(datasets []heatmapSets) {
@@ -152,11 +192,13 @@ func extractContainer(container *goquery.Selection, c chan<- heatmapSets) {
 	}
 }
 
-func getAnswer(question string) (ans string) {
-	fmt.Print(question)
-	fmt.Scanln(&ans)
+func getAnswer(question string) string {
+	in := bufio.NewReader(os.Stdin)
 
-	return
+	fmt.Print(question)
+	ans, _ := in.ReadString('\n')
+	ans = strings.Replace(ans, " ", "-", -1)
+	return ans
 }
 
 func checkErr(err error) {

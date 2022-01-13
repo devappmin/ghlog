@@ -1,8 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"os"
+	"strconv"
 
 	"main.com/auth"
 	"main.com/github"
@@ -14,9 +17,16 @@ const HELP_STRING string = `
 usage: gh <command>
 
 Here are few commands <3:
-	repo			Print all repositories on the github
-	create repo		Create a new repository
-	heatmap			Print all contributions as heatmap calendar`
+	repo                Print all repositories on your github
+	org                 Print all organizations you joined
+	create repo         Create a new repository
+	heatmap	[user]      Print all contributions as heatmap calendar
+
+You can also search repositories using:
+	search <query> [from] [to]          Search repositories from [from] to [to]
+	                                    Default value
+	                                    [from] = 0
+	                                    [to]   = 5`
 
 func run(args []string) {
 
@@ -30,15 +40,21 @@ func run(args []string) {
 	}
 
 	accessToken, id := auth.GetAuth()
-	client := github.GithubClient(accessToken)
+	client, ctx := github.GithubClient(accessToken)
 
 	switch args[0] {
 	case "repo":
-		github.PrintRepositories(client)
+		github.PrintRepositories(client, ctx)
+
+	case "org":
+		github.PrintOrganizations(client, ctx)
 
 	case "create":
+		if len(args) < 2 {
+			log.Fatalln(errors.New("Can't find command."))
+		}
 		if args[1] == "repo" {
-			github.CreateRepository(client)
+			github.CreateRepository(client, ctx)
 		}
 
 	case "heatmap":
@@ -46,6 +62,21 @@ func run(args []string) {
 			args = append(args, id)
 		}
 		github.Heatmap(args[1])
+
+	case "search":
+		if len(args) < 2 {
+			log.Fatalln(errors.New("Missing argument."))
+		}
+
+		from := 0
+		to := 5
+
+		if len(args) > 4 {
+			from, _ = strconv.Atoi(args[2])
+			to, _ = strconv.Atoi(args[3])
+		}
+
+		github.Search(client, ctx, args[1], from, to)
 	}
 }
 
@@ -54,6 +85,5 @@ func printHelp() {
 }
 
 func main() {
-
 	run(os.Args[1:])
 }
