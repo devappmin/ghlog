@@ -77,8 +77,13 @@ func Search(client *github.Client, ctx context.Context, title string, from int, 
 	}
 
 	for i := from; i < to; i++ {
-		fmt.Printf("%.3d────┬ name:        %s\n", i-from, results.Repositories[i].GetName())
-		fmt.Printf("       ├ description: %s\n", results.Repositories[i].GetDescription())
+		description := results.Repositories[i].GetDescription()
+		if len(description) > 50 {
+			description = description[:50] + "..."
+		}
+
+		fmt.Printf("%.3d────┬ name:        %s\n", i, results.Repositories[i].GetName())
+		fmt.Printf("       ├ description: %s\n", description)
 		fmt.Printf("       ├ author:      %s\n", results.Repositories[i].GetOwner().GetLogin())
 		fmt.Printf("       ├ link:        %s\n", results.Repositories[i].GetHTMLURL())
 		fmt.Printf("       ├ star:        %d Stars\n", results.Repositories[i].GetStargazersCount())

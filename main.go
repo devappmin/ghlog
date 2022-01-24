@@ -11,8 +11,6 @@ import (
 	"main.com/github"
 )
 
-// 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
-
 const HELP_STRING string = `
 usage: gh <command>
 
@@ -71,8 +69,11 @@ func run(args []string) {
 		from := 0
 		to := 5
 
-		if len(args) > 4 {
+		if len(args) >= 3 {
 			from, _ = strconv.Atoi(args[2])
+		}
+
+		if len(args) >= 4 {
 			to, _ = strconv.Atoi(args[3])
 		}
 
