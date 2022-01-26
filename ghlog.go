@@ -11,10 +11,11 @@ import (
 	"main.com/github"
 )
 
+const GHLOG_VERSION string = "v0.1.0"
 const HELP_STRING string = `
-usage: gh <command>
+usage: ghlog <command>
 
-Here are few commands <3:
+Here are few commands:
 	repo                Print all repositories on your github
 	org                 Print all organizations you joined
 	create repo         Create a new repository
@@ -82,6 +83,7 @@ func run(args []string) {
 }
 
 func printHelp() {
+	fmt.Printf("Unofficial Github Cli v%s\n", GHLOG_VERSION)
 	fmt.Println(HELP_STRING)
 }
 

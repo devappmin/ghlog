@@ -68,15 +68,15 @@ func Search(client *github.Client, ctx context.Context, title string, from int, 
 
 	resultsLen := len(results.Repositories)
 
-	if to > resultsLen {
-		to = resultsLen
+	if to >= resultsLen {
+		to = resultsLen - 1
 	}
 
 	if to == 0 || from > to {
 		log.Fatalln("No repositories found")
 	}
 
-	for i := from; i < to; i++ {
+	for i := from; i <= to; i++ {
 		description := results.Repositories[i].GetDescription()
 		if len(description) > 50 {
 			description = description[:50] + "..."
@@ -89,6 +89,7 @@ func Search(client *github.Client, ctx context.Context, title string, from int, 
 		fmt.Printf("       ├ star:        %d Stars\n", results.Repositories[i].GetStargazersCount())
 		fmt.Printf("       └ language:    %s\n", results.Repositories[i].GetLanguage())
 	}
+	fmt.Printf("Total %d repositories found, show matches from %d to %d", resultsLen, from, to)
 }
 
 func CreateRepository(client *github.Client, ctx context.Context) {
