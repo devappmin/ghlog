@@ -83,7 +83,7 @@ func run(args []string) {
 }
 
 func printHelp() {
-	fmt.Printf("Unofficial Github Cli v%s\n", GHLOG_VERSION)
+	fmt.Printf("Unofficial Github Cli %s\n", GHLOG_VERSION)
 	fmt.Println(HELP_STRING)
 }
 
