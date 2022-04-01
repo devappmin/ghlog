@@ -2,21 +2,21 @@
 
 ![Generic badge](https://img.shields.io/badge/Release-v0.1.0-green.svg)
 
-`ghlog` is unofficial GitHub cli tool which contains most-used functions on GitHub.
+`ghlog` is the unofficial GitHub CLI tool that contains the most-used functions on GitHub.
 
 ![code](https://user-images.githubusercontent.com/4322099/154396746-6ce6671b-4f7e-4668-8cf1-67f767aca1b1.png)
 
 ## Getting Started.
 
-1. Build `ghlog` using `go` by below command.
+1. Build `ghlog` using `go` by the below command.
 
 ```bash
 $ go build ghlog.go
 ```
 
-2. Move your application to wherever your want, likes `/usr/bin` on `Linux` or `C:/Program Files/ghlog` on `Windows`, and add environment path of the `ghlog`.
+2. Move your application to wherever your want, like `/usr/bin` on `Linux` or `C:/Program Files/ghlog` on `Windows`, and add the environment path of the `ghlog`.
 
-3. Start your `ghlog` using below command.
+3. Start your `ghlog` using the below command.
 
 ```bash
 $ ghlog
@@ -30,13 +30,13 @@ It will be saved on `.auth` file in `Home Directory`.
 
 ### repo/org
 
-You can print all of your repositories using below command.
+You can print all of your repositories using the below command.
 
 ```bash
 $ ghlog repo
 ```
 
-And likes `repo`, you can also print all organizations you joined using below command.
+Likes `repo`, in addition, you can also print all organizations you joined using the below command.
 
 ```bash
 $ ghlog org
@@ -44,25 +44,25 @@ $ ghlog org
 
 ### create repo
 
-You can also create a repository using below command.
+It is also possible to create a new repository using the following command.
 
 ```bash
 $ ghlog create repo
 ```
 
-It asks `Repository name` and `Visibility` of your repository.
+It will ask you about `Repository name` and `Visibility` of your repository.
 
 ### heatmap
 
-`Heatmap` prints GitHub contribution chart that you can see on your GitHub profile in command line interface.
+`Heatmap` prints a GitHub contribution chart that you can see on your GitHub profile in command-line interface.
 
-You can simply print your heatmap with below command.
+You can simply print your heatmap with the below command.
 
 ```bash
 $ ghlog heatmap
 ```
 
-If you want to check other users heatmap, please add `username`.
+You can also check other users' heatmap just by adding `username`.
 
 ```bash
 $ ghlog heatmap devappmin
